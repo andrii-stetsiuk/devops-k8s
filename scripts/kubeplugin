@@ -1,0 +1,163 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# kubeplugin - kubectl plugin to print CPU and memory usage for pods or nodes
+#
+# Output format (CSV):
+#   Resource, Namespace, Name, CPU, Memory
+#
+# Requirements:
+#   - kubectl available in PATH
+#   - metrics-server installed in the cluster (required for `kubectl top`)
+#
+# Usage:
+#   kubectl kubeplugin [pods|nodes] [-n|--namespace <ns>] [-l|--selector <label-selector>]
+#   # As a plain script (not via kubectl plugin resolution):
+#   ./scripts/kubeplugin [pods|nodes] [-n <ns>] [-l <selector>]
+#
+# Examples:
+#   kubectl kubeplugin pods -n kube-system
+#   kubectl kubeplugin nodes
+#   kubectl kubeplugin pods -n default -l app=my-app
+#
+# Install as kubectl plugin:
+#   chmod +x scripts/kubeplugin
+#   # put on PATH with kubectl-* name, e.g.:
+#   ln -sf "$(pwd)/scripts/kubeplugin" "${HOME}/.local/bin/kubectl-kubeplugin"  # or /usr/local/bin
+#
+
+print_help() {
+  cat <<'EOF'
+Usage:
+  kubectl kubeplugin [pods|nodes] [-n|--namespace <ns>] [-l|--selector <label-selector>]
+
+Description:
+  Prints CPU and memory usage in CSV:
+    Resource, Namespace, Name, CPU, Memory
+
+Options:
+  pods|nodes                 Resource to show metrics for (default: pods)
+  -n, --namespace <ns>       Namespace (pods only). Defaults to current context namespace or "default"
+  -l, --selector <selector>  Label selector (e.g., app=my-app)
+  -h, --help                 Show this help and exit
+
+Examples:
+  kubectl kubeplugin pods -n kube-system
+  kubectl kubeplugin nodes
+  kubectl kubeplugin pods -l app=my-app
+EOF
+}
+
+ensure_kubectl() {
+  if ! command -v kubectl >/dev/null 2>&1; then
+    echo "Error: kubectl not found in PATH" >&2
+    exit 127
+  fi
+}
+
+get_current_namespace() {
+  # Try to read the current namespace from context; fallback to "default"
+  local ns
+  ns="$(kubectl config view --minify -o jsonpath='{..namespace}' 2>/dev/null || true)"
+  if [[ -z "${ns}" ]]; then
+    ns="default"
+  fi
+  printf "%s" "${ns}"
+}
+
+main() {
+  ensure_kubectl
+
+  local resource="pods"
+  local namespace=""
+  local selector=""
+
+  # Argument parsing
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      pods|pod|po)
+        resource="pods"
+        shift
+        ;;
+      nodes|node|no)
+        resource="nodes"
+        shift
+        ;;
+      -n|--namespace)
+        if [[ $# -lt 2 ]]; then
+          echo "Error: $1 requires a value" >&2
+          exit 2
+        fi
+        namespace="$2"
+        shift 2
+        ;;
+      -l|--selector|--label)
+        if [[ $# -lt 2 ]]; then
+          echo "Error: $1 requires a value" >&2
+          exit 2
+        fi
+        selector="$2"
+        shift 2
+        ;;
+      -h|--help)
+        print_help
+        exit 0
+        ;;
+      *)
+        echo "Unknown argument: $1" >&2
+        print_help >&2
+        exit 2
+        ;;
+    esac
+  done
+
+  # Build kubectl top command based on resource type
+  local cmd=(kubectl top)
+  case "${resource}" in
+    pods)
+      if [[ -z "${namespace}" ]]; then
+        namespace="$(get_current_namespace)"
+      fi
+      cmd+=(pods --no-headers -n "${namespace}")
+      ;;
+    nodes)
+      cmd+=(nodes --no-headers)
+      ;;
+    *)
+      echo "Unsupported resource: ${resource}. Use 'pods' or 'nodes'." >&2
+      exit 2
+      ;;
+  esac
+  if [[ -n "${selector}" ]]; then
+    cmd+=(-l "${selector}")
+  fi
+
+  # Execute and format output
+  # kubectl top output without headers generally has fields:
+  #   NAME CPU(cores) MEMORY(bytes)
+  # We print: Resource, Namespace, Name, CPU, Memory
+  local output
+  if ! output="$("${cmd[@]}" 2>/dev/null)"; then
+    echo "Error: failed to retrieve metrics. Ensure metrics-server is installed and accessible." >&2
+    exit 1
+  fi
+
+  echo "Resource, Namespace, Name, CPU, Memory"
+  case "${resource}" in
+    pods)
+      # shellcheck disable=SC2001
+      awk -v ns="${namespace}" '
+        NF>=3 { printf("pod, %s, %s, %s, %s\n", ns, $1, $2, $3) }
+      ' <<< "${output}"
+      ;;
+    nodes)
+      awk '
+        NF>=3 { printf("node, -, %s, %s, %s\n", $1, $2, $3) }
+      ' <<< "${output}"
+      ;;
+  esac
+}
+
+main "$@"
+
+
