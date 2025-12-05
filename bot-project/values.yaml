@@ -1,0 +1,30 @@
+replicaCount: 1
+
+image:
+  repository: REPLACE_ME_REPO
+  tag: REPLACE_ME_TAG
+  arch: amd64
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+container:
+  port: 8080
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Plain token value that will be encoded into a Secret
+teleToken: ""
+
+
