@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: go-demo-app-cron
+spec:
+  schedule: "* * * * *"
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: curl
+              image: curlimages/curl:8.5.0
+              imagePullPolicy: IfNotPresent
+              args:
+                - /bin/sh
+                - -c
+                - curl -fsS http://go-demo-app/healthz || exit 1
+          restartPolicy: OnFailure
+
+

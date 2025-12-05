@@ -1,134 +1,15 @@
+## Kubernetes Manifest Prompt Portfolio
 
-Андрій Стецюк
-
-
-
-Дата народження:
-Сімейний стан:
-Адреса:
-Тел.:
-E-mail:
-
-
-02.04.1980
-одружений, сину 2011 р.н (12 років)
-м. Київ, вул. Симиренка, 7, кв. 59
-+380506117777 +380672554505
-andrii.stetsyuk@gmail.com
+| NAME | PROMPT | DESCRIPTION | EXAMPLE |
+| --- | --- | --- | --- |
+| app.yaml | Generate a Kubernetes Deployment named "go-demo-app" with 2 replicas running the container image "ghcr.io/den-vasyliev/go-demo-app:latest" exposing containerPort 8080, and a ClusterIP Service named "go-demo-app" mapping port 80 to targetPort 8080. Use labels app=go-demo-app everywhere. Output valid Kubernetes YAML only. If analyzing an existing manifest, first list issues/gaps and their impact, then provide a corrected YAML. | Baseline Deployment + Service for the Go demo app. | [app.yaml](app.yaml) |
+| app-livenessProbe.yaml | Generate a Deployment named "go-demo-app-liveness" (labels app=go-demo-app) with 2 replicas of "ghcr.io/den-vasyliev/go-demo-app:latest" exposing 8080. Add a livenessProbe using HTTP GET on path "/healthz" port 8080 with initialDelaySeconds 5, periodSeconds 10, failureThreshold 3. Output valid YAML only. For analysis, list issues first, then output a fixed YAML. | Demonstrates container livenessProbe configuration. | [app-livenessProbe.yaml](app-livenessProbe.yaml) |
+| app-readinessProbe.yaml | Generate a Deployment named "go-demo-app-readiness" (labels app=go-demo-app) with 2 replicas of "ghcr.io/den-vasyliev/go-demo-app:latest" exposing 8080. Add a readinessProbe using HTTP GET on path "/readyz" port 8080 with initialDelaySeconds 5, periodSeconds 10, successThreshold 1, failureThreshold 3. Output valid YAML only. For analysis, list issues first, then output a fixed YAML. | Demonstrates container readinessProbe configuration. | [app-readinessProbe.yaml](app-readinessProbe.yaml) |
+| app-volumeMounts.yaml | Generate: (1) ConfigMap "app-config" with key APP_MESSAGE, (2) PersistentVolumeClaim "app-pvc" (1Gi, RWO), and (3) Deployment "go-demo-app-volumes" (labels app=go-demo-app) with 1 replica of "ghcr.io/den-vasyliev/go-demo-app:latest" that mounts the ConfigMap at "/etc/app/config" (readOnly) and the PVC at "/data". Output valid multi-document YAML only. For analysis, list issues first, then output a fixed YAML. | Demonstrates mounting a ConfigMap and a PVC into a Deployment. | [app-volumeMounts.yaml](app-volumeMounts.yaml) |
+| app-cronjob.yaml | Generate a CronJob named "go-demo-app-cron" that runs every minute ("* * * * *"). The Job runs a container based on "curlimages/curl" executing: curl -fsS http://go-demo-app/healthz; restartPolicy OnFailure. Include minimal sensible history limits. Output valid YAML only. For analysis, list issues first, then output a fixed YAML. | Periodic health check against the app Service using a CronJob. | [app-cronjob.yaml](app-cronjob.yaml) |
+| app-job.yaml | Generate a Job named "hello-job" with restartPolicy Never and backoffLimit 1 that runs "busybox" to print "Hello, Kubernetes!" and exit. Output valid YAML only. For analysis, list issues first, then output a fixed YAML. | One-off batch Job example. | [app-job.yaml](app-job.yaml) |
+| app-multicontainer.yaml | Generate a Pod named "go-demo-app-multicontainer" (labels app=go-demo-app) with two containers: (1) the app container "ghcr.io/den-vasyliev/go-demo-app:latest" exposing 8080, and (2) a sidecar "busybox" tailing a shared log file. Use an emptyDir named "shared-logs" mounted at /var/log/app in both containers. Output valid YAML only. For analysis, list issues first, then output a fixed YAML. | Sidecar pattern with shared volume between containers. | [app-multicontainer.yaml](app-multicontainer.yaml) |
+| app-resources.yaml | Generate a Deployment named "go-demo-app-resources" (labels app=go-demo-app) with 2 replicas of "ghcr.io/den-vasyliev/go-demo-app:latest" exposing 8080. Configure container resources: requests cpu=100m, memory=128Mi; limits cpu=500m, memory=256Mi. Output valid YAML only. For analysis, list issues first, then output a fixed YAML. | Shows resource requests/limits best-practice defaults. | [app-resources.yaml](app-resources.yaml) |
+| app-secret-env.yaml | Generate: (1) Secret "app-secret" (Opaque) with keys DB_USER and DB_PASSWORD; (2) Deployment "go-demo-app-secret-env" (labels app=go-demo-app) using image "ghcr.io/den-vasyliev/go-demo-app:latest" that imports environment variables from this Secret using envFrom.secretRef. Output valid multi-document YAML only. For analysis, list issues first, then output a fixed YAML. | Demonstrates injecting env vars from a Secret into a Deployment. | [app-secret-env.yaml](app-secret-env.yaml) |
 
 
-
-
-IT-спеціаліст з багаторічним досвідом роботи у великій компанії з розподіленою структурою. Пройшов шлях розвитку від системного адміністратора до керівника відділу. Був одним з організаторів по впровадженню принципів ITIL в роботі відділу. Командна  робота. Активна участь у формуванні команди, мотивація підлеглих. На поточний момент працюю DevOps інженером у вітчизняній IT компанії
-
-
-Досвід:
-04.2021 — пот. час
-Temabit Fozzy Group
-Позиція: DevOps - інженер
-Завдання:
-Розробка та впровадження контейнерної інфраструктури
-Автоматизація процесів доставки та збирання додатків та сервісів
-Взаємодія з командами розробників
-
-
-04.2018 - 04.2021
-Maklai
-Позиція: Системний адміністратор
-Завдання:
-Підтримка поточної інфраструктури (OnPremis + Cloud)
-
-
-01.2017 – 04.2018
-Корпорація “First Realty Group”
-аутсорсинг бізнес-процесів мереж ведучих агентств нерухомості
-Позиція: “Провідний спеціаліст”
-Завдання:
-максимальна концентрація на технічній складовій роботи IT департаменту
-розгортання та супровід роботи системи моніторингу (Nagios, Zabbix)
-розвиток процедур та політик безпеки, регулюючих корпоративну безпеку, безпека електронної пошти, доступу до Internet, а також контроль доступу до мережевих ресурсів
-оцінка ризику ураження інформаційних систем
-забезпечення безперервної роботи бізнесу і аварійного відновлення
-забезпечення резервного копіювання даних
-впровадження принципів підвищення інформаційної безпеки підприємства
-автоматизація техпроцесів: написання сценаріїв, групових політик
-забезпечення роботи системних та мережевих сервісів 24/7
-забезпечення життєздатності розподіленої філійної локальної обчислювальної мережі (15 філій з 2 дата-центрами, порядка 1000 користувачів)
-
-
-
-01.2008 – 12.2016
-Корпорація “First Realty Group”
-аутсорсинг бізнес-процесів мереж ведучих агентств нерухомості
-Позиція: “Керівник відділу технічної підтримки користувачів”
-Завдання:
-забезпечення безперервної роботи користувачів з обчислювальними  ресурсами Компанії
-створення з нуля першої лінії техпідтримки, впровадження до роботи програмного продукту OTRS (Open-source Ticket Request System)
-розгортання та забезпечення безперервної роботи ферми терміналів для дистанційної роботи користувачів (Remote Desktop Services)
-переобладнання старої комп’ютерної техніки в бездискові термінальні станції (використана технологія Thinstation, Open Source)
-підтримка в робочому стані IT-інфраструктури компанії
-
-
-01.2003 - 12.2007
-АН “Благовіст”
-агентство нерухомості
-Позиція: Системний адміністратор
-Завдання:
-підтримка роботи користувачів
-установка, налагодження й обслуговування робочих станцій
-блочний ремонт техніки
-адміністрування серверів та робочих станцій
-адміністрування локальної мережі та каналів зв’язку
-
-
-
-
-
-Професійні навички:
-
-
-Управління роботою відділу техпідтримки (постановка технічних завдань, контроль виконання)
-Підтримка IT-інфраструктури, IT-проектів компанії
-Підтримка корпоративної політики безпеки в сфері IT
-Підтримка корпоративних стандартів компанії в області IT
-Проведення закупівля обладнання та вибір постачальників, мінімізація витрат
-Глибинне розуміння ролі IT департаменту в забезпеченні безперервності роботи компанії
-Великий досвід системного адміністрування
-Установка, налаштування, адміністрування усієї лінійки операційних систем Windows / Windows Server
-Робота з такими компонентами сімейства Windows Server: Active Directory, Terminal Services, Terminal Broker, WSUS, Routing & remote access, NAT, Group Policy
-Поштові системи: Postfix, Sendmail, Exchange
-Досвід роботи з Microsoft Sharepoint, MS SQL Server, MySQL.
-Досвід роботи з Hyper-V, VMWare ESXi. Хостинги Hetzner, Deltahost.
-Знання *nix-подібних систем (FreeBSD / CentOS / Ubuntu) на рівні системного адміністратора
-Побудова RAID масивів різних рівнів. Досвід роботи  з VxFlex OS (ScaleIO)
-Розуміння проблем інформаційної безпеки на великих підприємствах, а також проведення заходів  щодо підвищення  IT безпеки
-Досвід роботи з docker swarm, Kubernetes на рівні підтримки
-CI / CD: TeamCity, Gitlab
-Cloud: AWS, Hetzner. Маю сертифікації AWS: Solution Architect Associate, SysOps Administrator Accociate
-
-Мови:
-Російська (вільне володіння)
-Українська (вільне володіння)
-Англійська (технічна)
-
-Освіта:
-1997 - 2002
-
-
-Національний Технічний Університет України (КПІ)
-Факультет електроніки
-Спеціальність: Інформаційні технології проектування, Комп’ютерні науки.
-Звання: бакалавр, спеціаліст
-
-Особисті якості:
-
-
-Відповідальність, працездатність, комунікабельність, здатність організувати техпроцеси з нуля, уміння  створити  командну роботу колективу, аналітичний склад розуму, стресостійкість, здатність аналізувати ситуацію та  приймати  рішення в критических ситуаціях, уміння працювати з обмеженим бюджетом.
-Займаюсь громадською діяльністю.
-
-Хоббі:
-Їзда на мотоциклі, футбол, електромобілі.
-
-Додаткова інформація:
-Водійське посвідчення категорій «А», «Б»
-Готовність до відряджень.
