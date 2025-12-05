@@ -20,20 +20,6 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: go-demo-app
-  labels:
-    app: go-demo-app
-spec:
-  selector:
-    app: go-demo-app
-  ports:
-    - name: http
-      port: 80
-      targetPort: 8080
-  type: ClusterIP
+*** End of File
 
 
